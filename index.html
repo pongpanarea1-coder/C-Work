@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1769e0"><meta name="description" content="ระบบตารางทำงานออนไลน์สำหรับทีมขนาดเล็ก">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ตารางทำงานของฉัน</title>
+<style>
+:root{--blue:#1769e0;--bg:#f4f6fa;--ink:#202735;--muted:#748094;--line:#e5e9f0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans Thai",sans-serif}
+header{background:white;position:sticky;top:0;z-index:3;padding:14px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:20px;margin:0}button,input,select{font:inherit}button{border:0;border-radius:11px;padding:10px 14px;background:var(--blue);color:white;font-weight:600;cursor:pointer}button.secondary{background:#eef3fb;color:#24518c}button.danger{background:#fff0f0;color:#b42318}button:disabled{opacity:.5}
+main{max-width:1100px;margin:18px auto;padding:0 14px 40px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px #15294b08}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.muted{color:var(--muted)}.small{font-size:13px}.hidden{display:none!important}
+input,select{border:1px solid #d8deea;border-radius:10px;padding:11px;background:white;min-width:0;width:100%}label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.monthtitle{font-size:22px;font-weight:700}.week,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.week div{text-align:center;color:var(--muted);font-size:12px;padding:8px 0}.day{background:#fff;border:1px solid var(--line);min-height:105px;border-radius:7px;padding:5px;overflow:hidden}.day.other{background:#f8f9fb;color:#aab1bd}.day.today{outline:2px solid var(--blue)}.num{font-size:14px;font-weight:650;margin-bottom:5px}.chip{font-size:11px;line-height:1.5;padding:3px 5px;border-radius:4px;margin:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#222}.morning{background:#f8e99b}.afternoon{background:#dfb5f3}.off{background:#f69a9e}.special{background:#91d5bf}.custom{background:#9bd2ed}
+.member{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}.member:last-child{border:0}.legend{display:flex;gap:8px;flex-wrap:wrap}.legend span{font-size:12px;display:flex;align-items:center;gap:4px}.dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+dialog{border:0;border-radius:18px;padding:20px;width:min(440px,calc(100% - 24px));box-shadow:0 20px 70px #0003}dialog::backdrop{background:#15223877}.notice{padding:10px 12px;border-radius:10px;background:#fff8e5;color:#805b00;font-size:13px}
+@media(max-width:650px){main{margin:10px auto;padding:0 8px 28px}.panel{padding:11px;border-radius:13px}.day{min-height:82px;padding:3px}.num{font-size:12px}.chip{font-size:10px;padding:2px 3px}.monthtitle{font-size:18px}.formgrid{grid-template-columns:1fr}header{padding:12px}.hide-mobile{display:none}}
+</style>
+</head>
+<body>
+<header><div><h1>📅 ตารางทำงานของฉัน</h1><div class="small muted" id="subtitle">ปฏิทินไทย · พ.ศ.</div></div><div class="row"><button class="secondary" id="accountBtn">เข้าสู่ระบบ</button><button id="addBtn">＋ เพิ่มเวร</button></div></header>
+<main>
+<section class="panel" id="authPanel">
+<h2 style="margin:0 0 6px">เริ่มใช้งาน</h2><p class="muted small">ทดลองใช้ในเครื่องนี้ได้ หรือเชื่อมต่อฐานข้อมูลออนไลน์เพื่อใช้งานร่วมกันหลายคน</p>
+<div class="notice">โหมดทดลองจะเก็บข้อมูลไว้ในอุปกรณ์นี้เท่านั้น หากต้องการให้สมาชิกเห็นข้อมูลร่วมกัน ให้ตั้งค่า Supabase ตามคู่มือในไฟล์ ZIP</div>
+<div class="formgrid"><div><label>อีเมล</label><input id="email" type="email" placeholder="name@example.com"></div><div><label>รหัสผ่าน</label><input id="password" type="password" placeholder="อย่างน้อย 6 ตัวอักษร"></div></div>
+<div class="row" style="margin-top:12px"><button id="loginBtn">เข้าสู่ระบบ</button><button class="secondary" id="signupBtn">สมัครสมาชิก</button><button class="secondary" id="demoBtn">ทดลองใช้งาน</button></div>
+<p id="authMsg" class="small muted"></p>
+<details style="margin-top:10px"><summary>ตั้งค่าฐานข้อมูลออนไลน์</summary><label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"><label>Supabase anon / publishable key</label><input id="sbKey" placeholder="eyJ..."><button class="secondary" id="saveConfig" style="margin-top:10px">บันทึกการตั้งค่า</button><p class="small muted">ใช้เฉพาะ anon/publishable key เท่านั้น ห้ามใส่ service_role key</p></details>
+</section>
+<section class="panel hidden" id="teamPanel">
+<div class="row between"><div><b id="userLabel"></b><div class="small muted" id="teamLabel">ยังไม่ได้เข้าร่วมทีม</div></div><button class="secondary" id="logoutBtn">ออกจากระบบ</button></div>
+<div class="row" style="margin-top:12px"><input id="teamName" placeholder="ชื่อหน่วยงาน / ทีม" style="flex:1"><button id="createTeam">สร้างทีม</button></div>
+<div class="row" style="margin-top:8px"><input id="inviteCode" placeholder="รหัสเชิญทีม" style="flex:1;text-transform:uppercase"><button class="secondary" id="joinTeam">เข้าร่วมทีม</button></div>
+<div class="small muted" id="teamMsg">สร้างทีมแล้วแชร์รหัสเชิญให้สมาชิกไม่เกิน 10 คน</div>
+</section>
+<section class="panel hidden" id="appPanel">
+<div class="row between"><div><div class="monthtitle" id="monthTitle"></div><div class="small muted">แสดงปีพุทธศักราช (พ.ศ.)</div></div><div class="row"><button class="secondary" id="prev">‹</button><button class="secondary" id="today">วันนี้</button><button class="secondary" id="next">›</button></div></div>
+<div class="legend" style="margin:12px 0"><span><i class="dot" style="background:#f8e99b"></i>ช เวรเช้า</span><span><i class="dot" style="background:#dfb5f3"></i>บ เวรบ่าย</span><span><i class="dot" style="background:#f69a9e"></i>หยุด</span><span><i class="dot" style="background:#91d5bf"></i>วันสำคัญ</span><span><i class="dot" style="background:#9bd2ed"></i>พิเศษ</span></div>
+<div class="week"><div>อา.</div><div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div><div>ส.</div></div><div class="days" id="calendar"></div>
+<div class="small muted" style="margin-top:8px">แตะวันที่หรือรายการเวรเพื่อแก้ไข · ข้อมูลออนไลน์จะแสดงร่วมกับสมาชิกในทีม</div>
+</section>
+<section class="panel hidden" id="membersPanel"><div class="row between"><b>สมาชิกในทีม</b><span class="small muted" id="memberCount"></span></div><div id="members"></div></section>
+<section class="panel hidden" id="listPanel"><b>รายการเวรเดือนนี้</b><div id="shiftList" class="small muted" style="margin-top:8px"></div></section>
+</main>
+<dialog id="shiftDialog"><form method="dialog" id="shiftForm"><div class="row between"><h3 style="margin:0" id="dialogTitle">เพิ่มเวร</h3><button class="secondary" value="cancel">✕</button></div>
+<label>วันที่</label><input type="date" id="shiftDate" required>
+<label>ประเภทเวร</label><select id="shiftType"><option value="morning">ช · เวรเช้า</option><option value="afternoon">บ · เวรบ่าย</option><option value="off">หยุด</option><option value="special">เวรพิเศษ</option><option value="custom">อื่น ๆ</option></select>
+<label>รายละเอียด (ไม่บังคับ)</label><input id="shiftNote" maxlength="80" placeholder="เช่น เวรดึก / อบรม / ลาพักร้อน">
+<div class="row between" style="margin-top:16px"><button type="button" class="danger" id="deleteShift">ลบรายการ</button><div class="row"><button type="button" class="secondary" id="cancelShift">ยกเลิก</button><button type="submit" id="saveShift">บันทึก</button></div></div></form></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const $=id=>document.getElementById(id), today=new Date();let view=new Date(today.getFullYear(),today.getMonth(),1), shifts=[],members=[],currentUser=null,team=null,editing=null,client=null,demo=false;
+const labels={morning:'ช',afternoon:'บ',off:'หยุด',special:'วันสำคัญ',custom:'พิเศษ'};
+const classNames={morning:'morning',afternoon:'afternoon',off:'off',special:'special',custom:'custom'};
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function thaiDate(d){return new Intl.DateTimeFormat('th-TH',{day:'numeric',month:'long',year:'numeric'}).format(d)}
+function monthName(d){return new Intl.DateTimeFormat('th-TH',{month:'long'}).format(d)+' '+(d.getFullYear()+543)}
+function persistDemo(){localStorage.setItem('ws_demo_shifts',JSON.stringify(shifts))}
+function show(id,on=true){$(id).classList.toggle('hidden',!on)}
+function msg(t){$('authMsg').textContent=t}
+function cfg(){return {url:localStorage.getItem('ws_url')||'',key:localStorage.getItem('ws_key')||''}}
+function connect(){let c=cfg();if(c.url&&c.key&&window.supabase){client=window.supabase.createClient(c.url,c.key);return true}return false}
+async function init(){let c=cfg();$('sbUrl').value=c.url;$('sbKey').value=c.key;if(connect()){let {data:{session}}=await client.auth.getSession();if(session){currentUser=session.user;await afterLogin();return}}}
+$('saveConfig').onclick=()=>{localStorage.setItem('ws_url',$('sbUrl').value.trim());localStorage.setItem('ws_key',$('sbKey').value.trim());msg('บันทึกการตั้งค่าแล้ว กรุณาเข้าสู่ระบบอีกครั้ง');connect()};
+$('signupBtn').onclick=async()=>{if(!connect()){msg('กรุณาตั้งค่า Supabase ก่อนสมัครสมาชิก');return}let {data,error}=await client.auth.signUp({email:$('email').value,password:$('password').value});msg(error?error.message:'สมัครสมาชิกแล้ว หากเปิดยืนยันอีเมล กรุณาตรวจสอบกล่องจดหมาย')};
+$('loginBtn').onclick=async()=>{if(!connect()){msg('กรุณาตั้งค่า Supabase หรือเลือกทดลองใช้งาน');return}let {data,error}=await client.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error){msg(error.message);return}currentUser=data.user;await afterLogin()};
+$('demoBtn').onclick=()=>{demo=true;currentUser={id:'demo',email:'โหมดทดลอง'};shifts=JSON.parse(localStorage.getItem('ws_demo_shifts')||'[]');members=[{user_id:'demo',email:'คุณ (ทดลอง)'}];team={name:'ทีมตัวอย่าง',invite_code:'DEMO'};afterLoginUI()};
+$('logoutBtn').onclick=async()=>{if(client)await client.auth.signOut();currentUser=null;team=null;demo=false;show('teamPanel',false);show('appPanel',false);show('membersPanel',false);show('listPanel',false);show('authPanel',true);$('accountBtn').textContent='เข้าสู่ระบบ'};
+$('accountBtn').onclick=()=>{if(!currentUser){show('authPanel');$('authPanel').scrollIntoView({behavior:'smooth'})}else $('teamPanel').scrollIntoView({behavior:'smooth'})};
+async function afterLogin(){show('authPanel',false);show('teamPanel');show('appPanel');$('userLabel').textContent=currentUser.email;await loadTeam()}
+function afterLoginUI(){show('authPanel',false);show('teamPanel');show('appPanel');show('membersPanel');show('listPanel');$('userLabel').textContent=currentUser.email;$('teamLabel').textContent=team.name+' · โหมดทดลอง';$('teamMsg').textContent='ข้อมูลทดลองบันทึกไว้ในอุปกรณ์นี้';render()}
+async function loadTeam(){let {data,error}=await client.from('team_members').select('team_id,teams(id,name,invite_code)').eq('user_id',currentUser.id).limit(1).maybeSingle();if(error){$('teamMsg').textContent='ยังโหลดทีมไม่ได้: '+error.message;return}if(data){team=data.teams;$('teamLabel').textContent=team.name+' · รหัสเชิญ '+team.invite_code;await loadShared()}else{$('teamLabel').textContent='ยังไม่ได้เข้าร่วมทีม';show('appPanel',false);show('membersPanel',false);show('listPanel',false)}}
+$('createTeam').onclick=async()=>{if(demo){team={name:$('teamName').value||'ทีมทดลอง',invite_code:'DEMO'};afterLoginUI();return}if(!currentUser)return;let {data,error}=await client.rpc('create_team',{team_name:$('teamName').value||'ทีมของฉัน'});if(error){$('teamMsg').textContent=error.message;return}await loadTeam()};
+$('joinTeam').onclick=async()=>{if(demo){$('teamMsg').textContent='โหมดทดลองไม่รองรับการเชิญสมาชิก';return}let {error}=await client.rpc('join_team',{invite_code_input:$('inviteCode').value.trim().toUpperCase()});$('teamMsg').textContent=error?error.message:'เข้าร่วมทีมแล้ว';if(!error)await loadTeam()};
+async function loadShared(){let {data,error}=await client.from('shifts').select('*').eq('team_id',team.id).order('work_date');if(error){$('teamMsg').textContent=error.message;return}shifts=data||[];let m=await client.from('team_members').select('user_id,profiles(email)').eq('team_id',team.id);members=(m.data||[]).map(x=>({user_id:x.user_id,email:x.profiles?.email||'สมาชิก'}));afterLoginUI();$('teamLabel').textContent=team.name+' · รหัสเชิญ '+team.invite_code}
+function render(){ $('monthTitle').textContent=monthName(view);let first=new Date(view.getFullYear(),view.getMonth(),1),start=new Date(first);start.setDate(1-first.getDay());let html='';for(let i=0;i<42;i++){let d=new Date(start);d.setDate(start.getDate()+i);let dayShifts=shifts.filter(s=>s.work_date===iso(d));let mine=dayShifts.filter(s=>demo||s.user_id===currentUser.id);html+=`<div class="day ${d.getMonth()!==view.getMonth()?'other':''} ${iso(d)===iso(today)?'today':''}" data-date="${iso(d)}"><div class="num">${d.getDate()}</div>${dayShifts.slice(0,3).map(s=>`<div class="chip ${classNames[s.shift_type]||'custom'}" data-shift="${s.id}" title="${esc(s.note)}">${esc(labels[s.shift_type]||'เวร')} ${esc(s.note||'')}</div>`).join('')}${dayShifts.length>3?`<div class="small muted">+${dayShifts.length-3}</div>`:''}</div>`} $('calendar').innerHTML=html;
+$('calendar').querySelectorAll('.day').forEach(el=>el.onclick=e=>{let chip=e.target.closest('[data-shift]');if(chip){let s=shifts.find(x=>String(x.id)===chip.dataset.shift);if(s&&(demo||s.user_id===currentUser.id))openShift(s)}else openShift(null,el.dataset.date)});
+let list=shifts.filter(s=>s.work_date.startsWith(iso(view).slice(0,7))).sort((a,b)=>a.work_date.localeCompare(b.work_date));$('shiftList').innerHTML=list.length?list.map(s=>`<div class="member"><span><b>${thaiDate(new Date(s.work_date+'T12:00:00'))}</b> · ${esc(labels[s.shift_type]||'เวร')} ${esc(s.note||'')}</span><span class="muted">${esc(members.find(m=>m.user_id===s.user_id)?.email||'')}</span></div>`).join(''):'ยังไม่มีรายการเวรในเดือนนี้';$('members').innerHTML=members.map(m=>`<div class="member"><span>${esc(m.email)}</span><span class="small muted">${shifts.filter(s=>s.user_id===m.user_id).length} รายการ</span></div>`).join('');$('memberCount').textContent=members.length+'/10 คน';}
+function openShift(s,date){editing=s;$('dialogTitle').textContent=s?'แก้ไขเวร':'เพิ่มเวร';$('shiftDate').value=s?s.work_date:(date||iso(today));$('shiftType').value=s?s.shift_type:'morning';$('shiftNote').value=s?.note||'';$('deleteShift').classList.toggle('hidden',!s);$('shiftDialog').showModal()}
+$('addBtn').onclick=()=>{if(!currentUser){show('authPanel');msg('กรุณาเข้าสู่ระบบหรือทดลองใช้งาน');return}openShift(null)};
+$('cancelShift').onclick=()=>$('shiftDialog').close();
+$('shiftForm').onsubmit=async e=>{e.preventDefault();let payload={work_date:$('shiftDate').value,shift_type:$('shiftType').value,note:$('shiftNote').value.trim()};if(demo){if(editing){Object.assign(editing,payload)}else shifts.push({...payload,id:'d'+Date.now(),user_id:'demo'});persistDemo()}else{if(!team){$('teamMsg').textContent='กรุณาสร้างทีมหรือเข้าร่วมทีมก่อน';return}if(editing){let {error}=await client.from('shifts').update(payload).eq('id',editing.id);if(error){alert(error.message);return}}else{let {error}=await client.from('shifts').insert({...payload,team_id:team.id,user_id:currentUser.id});if(error){alert(error.message);return}}await loadShared()}$('shiftDialog').close();render()};
+$('deleteShift').onclick=async()=>{if(!editing)return;if(!confirm('ยืนยันลบรายการนี้?'))return;if(demo){shifts=shifts.filter(s=>s.id!==editing.id);persistDemo()}else{let {error}=await client.from('shifts').delete().eq('id',editing.id);if(error){alert(error.message);return}await loadShared()}$('shiftDialog').close();render()};
+$('prev').onclick=()=>{view.setMonth(view.getMonth()-1);render()};$('next').onclick=()=>{view.setMonth(view.getMonth()+1);render()};$('today').onclick=()=>{view=new Date(today.getFullYear(),today.getMonth(),1);render()};
+init();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
